@@ -8,7 +8,7 @@ public class RedeliveryTest {
 	@Test
 	public void testOneRedelivery() throws InterruptedException {
 		
-		TokenizedChannelService service = new MultiThreadedChannelService(10);
+		TokenizedChannelService service = new DefaultChannelService(10);
 		
 		String token = service.createReadToken("canale1");
 		
@@ -40,7 +40,7 @@ public class RedeliveryTest {
 	@Test
 	public void testTwoRedeliveries() throws InterruptedException {
 		
-		TokenizedChannelService service = new MultiThreadedChannelService(10);
+		TokenizedChannelService service = new DefaultChannelService(10);
 		
 		String token = service.createReadToken("canale1");
 		

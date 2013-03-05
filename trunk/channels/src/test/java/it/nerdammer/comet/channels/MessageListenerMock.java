@@ -12,13 +12,13 @@ public class MessageListenerMock implements MessageListener {
 	
 	private String channelID;
 	
-	private TokenizedChannelService service;
-	
 	private String message;
 	
 	private Lock monitor;
 	
 	private Condition messageArrival;
+	
+	private TokenizedChannelService channelService;
 	
 	private Long delay;
 	
@@ -38,7 +38,7 @@ public class MessageListenerMock implements MessageListener {
 
 	public void registerChannelService(TokenizedChannelService service, String channelID) {
 		this.channelID = channelID;
-		this.service = service;
+		this.channelService = service;
 	}
 
 	public void onMessage(String message) throws IOException {
@@ -64,7 +64,6 @@ public class MessageListenerMock implements MessageListener {
 		}
 		
 		this.message = message;
-		service.removeMessageListener(this);
 	}
 	
 	public String waitForMessage() {
@@ -97,12 +96,20 @@ public class MessageListenerMock implements MessageListener {
 		}
 	}
 	
+	public String getMessage() {
+		return message;
+	}
+	
 	public Long getDelay() {
 		return delay;
 	}
 	
 	public void setDelay(Long delay) {
 		this.delay = delay;
+	}
+	
+	public void simulateTimeout() {
+		this.channelService.removeMessageListener(this);
 	}
 	
 }

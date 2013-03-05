@@ -2,7 +2,7 @@ package it.nerdammer.comet.channels;
 
 final class ChannelServiceFactory {
 
-	private static final ChannelService service = new MultiThreadedChannelService(2);
+	private static final ChannelService service = new DefaultChannelService(2);
 	
 	private static final MessageConverter converter = new DefaultMessageConverter();
 	
