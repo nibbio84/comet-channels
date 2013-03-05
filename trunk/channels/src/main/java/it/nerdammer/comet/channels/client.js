@@ -6,23 +6,23 @@
  * Read functions
  */
 
-function initNibbioChannel(token, callback) {
+function initCometChannel(token, callback) {
 	
 	if(!token || token==null || token=="") {
 		return;
 	}
 	
 	
-	nibbioChannelEstablishConnection(callback, token);
+	cometChannelEstablishConnection(callback, token);
 }
 
-function nibbioChannelEstablishConnection(callback, token) {
+function cometChannelEstablishConnection(callback, token) {
 	
 	if(token==null) {
 		return;
 	}
 	
-	var url = "${contextPath}/nibbiochannels/channels";
+	var url = "${contextPath}/comet-channels/channels";
 	
 	$.ajax({
 		url: url,
@@ -40,10 +40,10 @@ function nibbioChannelEstablishConnection(callback, token) {
 		},
 		complete: function(jqXHR, status) {
 			if(status=="success") {
-				nibbioChannelEstablishConnection(callback, token);
+				cometChannelEstablishConnection(callback, token);
 			} else {
 				setTimeout(function() {
-					nibbioChannelEstablishConnection(callback, token);
+					cometChannelEstablishConnection(callback, token);
 				}, 15000);
 			}
 		}
@@ -56,7 +56,7 @@ function nibbioChannelEstablishConnection(callback, token) {
  * Write functions
  */
 
-function nibbioChannelMessageSender(token) {
+function cometChannelMessageSender(token) {
 	
 	this.token = token;
 	
@@ -66,7 +66,7 @@ function nibbioChannelMessageSender(token) {
 			return;
 		}
 		
-		var url = "${contextPath}/nibbiochannels/channels";
+		var url = "${contextPath}/comet-channels/channels";
 		
 		$.ajax({
 			url: url,

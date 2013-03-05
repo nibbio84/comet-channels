@@ -80,6 +80,8 @@ class DefaultChannelService implements TokenizedChannelService {
 		if(jsonMessage==null) {
 			throw new IllegalArgumentException("Please, provide a valid jsonMessage");
 		}
+		cleanupListeners();
+		
 		String json = ChannelServiceFactory.getMessageConverter().convert(jsonMessage, channelID);
 
 		checkAndAddToUndelivered(json, channelID);
@@ -101,6 +103,7 @@ class DefaultChannelService implements TokenizedChannelService {
 		if(unparsedMessage==null) {
 			throw new IllegalArgumentException("Please, provide a valid unparsedMessage");
 		}
+		cleanupListeners();
 		
 		String  json = ChannelServiceFactory.getMessageConverter().convertUnparsedJson(unparsedMessage, channelID);
 		
@@ -114,7 +117,6 @@ class DefaultChannelService implements TokenizedChannelService {
 	}
 	
 	protected synchronized void checkAndAddToUndelivered(String message, String channelID) {
-		cleanupListeners();
 		
 		for(String token : this.removedReadTokens.keySet()) {
 			String chan = this.readTokenMap.get(token);
@@ -157,6 +159,7 @@ class DefaultChannelService implements TokenizedChannelService {
 		}
 		
 		channelSet.add(listener);
+		removedReadTokens.remove(token);
 
 		listener.registerChannelService(this, channelID);
 		
@@ -165,7 +168,10 @@ class DefaultChannelService implements TokenizedChannelService {
 		List<String> undelivered = this.undeliveredMessages.get(token);
 		if(undelivered!=null && undelivered.size()>0) {
 			String message = undelivered.remove(0);
-			removeMessageListener(listener);
+			
+			this.removedReadTokens.put(token, System.currentTimeMillis());
+			messageListeners.get(channelID).remove(listener);
+			
 			doSendMessage(message, listener);
 			return;
 		}
@@ -179,8 +185,6 @@ class DefaultChannelService implements TokenizedChannelService {
 		if(!messageListeners.get(channelId).contains(listener)) {
 			throw new IllegalArgumentException("The listener has not been registered yet");
 		}
-		
-		
 		cleanupListeners();
 		
 		String token = listener.getToken();

@@ -39,7 +39,7 @@ public class ChannelsJavascriptLoaderServlet extends HttpServlet {
 			res.getWriter().println("// code for reading");
 			res.getWriter().println("$(document).ready(function() {");
 			res.getWriter().println("	var token = \"" + readToken.replace("\"", "\\\"") + "\";");
-			res.getWriter().println("	initNibbioChannel(token, " +  callbackFunction + ");");
+			res.getWriter().println("	initCometChannel(token, " +  callbackFunction + ");");
 			res.getWriter().println("});");
 
 		} else {
@@ -53,7 +53,7 @@ public class ChannelsJavascriptLoaderServlet extends HttpServlet {
 			
 			res.getWriter().println();
 			res.getWriter().println("// code for writing");
-			res.getWriter().println("var " + sender + " = new nibbioChannelMessageSender(\"" + writeToken + "\");");
+			res.getWriter().println("var " + sender + " = new cometChannelMessageSender(\"" + writeToken + "\");");
 			
 		} else {
 			res.getWriter().println("// write mode disabled");

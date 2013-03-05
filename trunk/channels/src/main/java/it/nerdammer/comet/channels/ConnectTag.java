@@ -12,7 +12,7 @@ public class ConnectTag extends TagSupport {
 	
 	private static final long serialVersionUID = 1L;
 	
-	private static final String SKIP_LIBRARY_PROPERTY = "it.nerdammer.nibbio.channels.SKIP_LIBRARY";
+	private static final String SKIP_LIBRARY_PROPERTY = "it.nerdammer.comet.channels.SKIP_LIBRARY";
 	
 	private String channel;
 	
@@ -85,7 +85,7 @@ public class ConnectTag extends TagSupport {
 			}
 			pageContext.setAttribute(SKIP_LIBRARY_PROPERTY, true);
 				
-			pageContext.getOut().print("<script type=\"text/javascript\" src=\"" + contextPath + "/nibbiochannels/client.js?load=true");
+			pageContext.getOut().print("<script type=\"text/javascript\" src=\"" + contextPath + "/comet-channels/client.js?load=true");
 			
 			if(readToken!=null) {
 				pageContext.getOut().print("&read_token=" + URLEncoder.encode(readToken, "UTF-8"));
