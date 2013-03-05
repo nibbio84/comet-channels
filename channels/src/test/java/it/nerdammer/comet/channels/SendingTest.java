@@ -11,7 +11,7 @@ public class SendingTest {
 	@Test
 	public void testOneListener() {
 		
-		TokenizedChannelService service = new MultiThreadedChannelService(10);
+		TokenizedChannelService service = new DefaultChannelService(10);
 		
 		String token = service.createReadToken("canale1");
 		
@@ -30,7 +30,7 @@ public class SendingTest {
 	@Test
 	public void testTwoListeners() {
 		
-		TokenizedChannelService service = new MultiThreadedChannelService(10);
+		TokenizedChannelService service = new DefaultChannelService(10);
 		
 		String token = service.createReadToken("canale1");
 		
@@ -56,7 +56,7 @@ public class SendingTest {
 	@Test
 	public void testMultListeners() {
 		
-		TokenizedChannelService service = new MultiThreadedChannelService(10);
+		TokenizedChannelService service = new DefaultChannelService(10);
 		
 		String token = service.createReadToken("canale1");
 		
@@ -83,7 +83,7 @@ public class SendingTest {
 	@Test
 	public void testMultListenersMultiMessages() {
 		
-		TokenizedChannelService service = new MultiThreadedChannelService(35);
+		TokenizedChannelService service = new DefaultChannelService(35);
 		
 		String token1 = service.createReadToken("canale1");
 		String token2 = service.createReadToken("canale2");

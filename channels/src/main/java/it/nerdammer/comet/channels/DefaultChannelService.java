@@ -1,6 +1,6 @@
 package it.nerdammer.comet.channels;
 
-import java.util.Collection;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,27 +9,35 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-abstract class AbstractChannelService implements TokenizedChannelService {
+class DefaultChannelService implements TokenizedChannelService {
 
 	private Map<String, String> readTokenMap;
 	private Map<String, String> writeTokenMap;
 	
-	private Map<String, Set<MessageListener>> channels;
+	private Map<String, Set<MessageListener>> messageListeners;
 	
 	private Map<String, Long> removedReadTokens;
 	private Map<String, List<String>> undeliveredMessages;
 	
+	private ScheduledThreadPoolExecutor executor;
+	
 	private long cleanupTime = 10000;
 	
-	public AbstractChannelService() {
+	
+	public DefaultChannelService(int corePoolSize) {
 		this.readTokenMap = new HashMap<String, String>();
 		this.writeTokenMap = new HashMap<String, String>();
 		
-		this.channels = new HashMap<String, Set<MessageListener>>();
+		this.messageListeners = new HashMap<String, Set<MessageListener>>();
 		
 		this.removedReadTokens = new HashMap<String, Long>();
 		this.undeliveredMessages = new HashMap<String, List<String>>();
+		
+		this.executor = new ScheduledThreadPoolExecutor(corePoolSize);
 	}
 	
 	public synchronized String createReadToken(String channelID) {
@@ -77,7 +85,10 @@ abstract class AbstractChannelService implements TokenizedChannelService {
 		checkAndAddToUndelivered(json, channelID);
 		
 		Set<MessageListener> listeners = getMessageListeners(channelID);
-		doSendMessage(json, listeners);
+		for(MessageListener listener : listeners) {
+			removeMessageListener(listener);
+			doSendMessage(json, listener);
+		}
 	}
 	
 	public synchronized void sendUnparsedMessage(String token, String unparsedMessage) {
@@ -96,7 +107,10 @@ abstract class AbstractChannelService implements TokenizedChannelService {
 		checkAndAddToUndelivered(json, channelID);
 		
 		Set<MessageListener> listeners = getMessageListeners(channelID);
-		doSendMessage(json, listeners);
+		for(MessageListener listener : listeners) {
+			removeMessageListener(listener);
+			doSendMessage(json, listener);
+		}
 	}
 	
 	protected synchronized void checkAndAddToUndelivered(String message, String channelID) {
@@ -119,10 +133,10 @@ abstract class AbstractChannelService implements TokenizedChannelService {
 	public synchronized void addMessageListener(MessageListener listener) {
 		String token = listener.getToken();
 		String channelID = getChannelIDForReading(token);
-		Set<MessageListener> channelSet = channels.get(channelID);
+		Set<MessageListener> channelSet = messageListeners.get(channelID);
 		
 		if(channelSet!=null) {
-			for(MessageListener lis : this.channels.get(channelID)) {
+			for(MessageListener lis : this.messageListeners.get(channelID)) {
 				if(lis.equals(listener)) {
 					throw new IllegalArgumentException("Listener already registered");
 				}
@@ -139,7 +153,7 @@ abstract class AbstractChannelService implements TokenizedChannelService {
 		
 		if(channelSet==null) {
 			channelSet = new HashSet<MessageListener>();
-			channels.put(channelID, channelSet);
+			messageListeners.put(channelID, channelSet);
 		}
 		
 		channelSet.add(listener);
@@ -151,7 +165,8 @@ abstract class AbstractChannelService implements TokenizedChannelService {
 		List<String> undelivered = this.undeliveredMessages.get(token);
 		if(undelivered!=null && undelivered.size()>0) {
 			String message = undelivered.remove(0);
-			doSendMessage(message, Collections.singleton(listener));
+			removeMessageListener(listener);
+			doSendMessage(message, listener);
 			return;
 		}
 	}
@@ -161,7 +176,7 @@ abstract class AbstractChannelService implements TokenizedChannelService {
 		if(channelId==null) {
 			throw new IllegalArgumentException("The listener doesn't have an associated channelID");
 		}
-		if(!channels.get(channelId).contains(listener)) {
+		if(!messageListeners.get(channelId).contains(listener)) {
 			throw new IllegalArgumentException("The listener has not been registered yet");
 		}
 		
@@ -170,7 +185,7 @@ abstract class AbstractChannelService implements TokenizedChannelService {
 		
 		String token = listener.getToken();
 		this.removedReadTokens.put(token, System.currentTimeMillis());
-		channels.get(channelId).remove(listener);
+		messageListeners.get(channelId).remove(listener);
 	}
 	
 	protected synchronized void cleanupListeners() {
@@ -186,13 +201,13 @@ abstract class AbstractChannelService implements TokenizedChannelService {
 		for(String tk : tokenToRemove) {
 			removedReadTokens.remove(tk);
 			undeliveredMessages.remove(tk);
-			readTokenMap.remove(tk);
+			//readTokenMap.remove(tk); // Don't remove
 		}
 	}
 	
 	protected synchronized Set<MessageListener> getMessageListeners(String channelID) {
 		Set<MessageListener> listeners;
-		Set<MessageListener> contextsRef = channels.get(channelID);
+		Set<MessageListener> contextsRef = messageListeners.get(channelID);
 		if(contextsRef!=null) {
 			listeners = new HashSet<MessageListener>(contextsRef);
 		} else {
@@ -202,6 +217,32 @@ abstract class AbstractChannelService implements TokenizedChannelService {
 		return listeners;
 	}
 	
-	protected abstract void doSendMessage(String json, Collection<MessageListener> messageListeners);
+	protected void doSendMessage(final String json, final MessageListener listener) {
+	
+			executor.submit(new Runnable() {
+				public void run() {
+					try {
+						listener.onMessage(json);
+
+					} catch (IOException e) {
+						Logger.getAnonymousLogger()
+								.info("Channel with token " + listener.getToken()
+										+ " disconnected");
+					} catch (Throwable e) {
+						Logger.getAnonymousLogger().log(Level.WARNING,
+								"Error on channel with token " + listener.getToken(), e);
+					}
+				}
+			});
+		
+	}
+	
+	public void setCleanupTime(long cleanupTime) {
+		this.cleanupTime = cleanupTime;
+	}
+	
+	public long getCleanupTime() {
+		return cleanupTime;
+	}
 	
 }

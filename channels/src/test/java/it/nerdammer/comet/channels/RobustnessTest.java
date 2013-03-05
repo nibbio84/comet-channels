@@ -7,7 +7,7 @@ public class RobustnessTest {
 
 	@Test
 	public void setTwice() {
-		TokenizedChannelService service = new MultiThreadedChannelService(10);
+		TokenizedChannelService service = new DefaultChannelService(10);
 		
 		String token = service.createReadToken("canale1");
 		
@@ -24,7 +24,7 @@ public class RobustnessTest {
 	
 	@Test
 	public void removeNonExistent() {
-		TokenizedChannelService service = new MultiThreadedChannelService(10);
+		TokenizedChannelService service = new DefaultChannelService(10);
 		
 		String token = service.createReadToken("canale1");
 		

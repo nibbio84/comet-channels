@@ -50,7 +50,6 @@ class AsyncContextMessageListener implements MessageListener {
 			}
 			
 			public void onComplete(AsyncEvent arg0) throws IOException {
-				service.removeMessageListener(AsyncContextMessageListener.this);					
 			}
 		});
 	}
