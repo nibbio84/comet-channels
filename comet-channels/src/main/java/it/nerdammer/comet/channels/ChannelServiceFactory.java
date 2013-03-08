@@ -1,6 +1,6 @@
 package it.nerdammer.comet.channels;
 
-final class ChannelServiceFactory {
+public final class ChannelServiceFactory {
 
 	private static final ChannelService service = new DefaultChannelService(2);
 	
