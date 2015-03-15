@@ -1,0 +1,1 @@
+Comet-Channels is an API allowing easy Server-Client (Reverse-AJAX) Communication. No configuration is needed, just plug the library into JEE 6 Web Container and use it.
